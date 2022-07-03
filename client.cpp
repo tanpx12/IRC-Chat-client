@@ -127,7 +127,6 @@ int _socket;
 list<IRCCommandHook> _hooks;
 
 
-
 bool SendData(char const* data)
 {
     if (_connected)
@@ -199,22 +198,22 @@ void msgCommand(string arguments)
     string to = arguments.substr(0, arguments.find(" "));
     string text = arguments.substr(arguments.find(" ") + 1);
 
-    cout << "To " + to + " :" + text << endl;
-    SendIRC("PRIVMSG" + to + " :" + text);
+    cout << "To " + to + ": " + text << endl;
+    SendIRC("PRIVMSG " + to + " :" + text);
 }
 
 void joinCommand(string channel)
 {
     if (channel[0] != '#')
         channel = "#" + channel;
-    SendIRC("JOIN" + channel);
+    SendIRC("JOIN " + channel);
 }
 
 void partCommand(string channel)
 {
     if (channel[0] != '#')
         channel = "#" + channel;
-    SendIRC("PART" + channel);
+    SendIRC("PART " + channel);
 }
 
 void ctcpCommand(string arguments)
@@ -224,16 +223,16 @@ void ctcpCommand(string arguments)
 
     transform(text.begin(), text.end(), text.begin(), towupper);
 
-    SendIRC("PRIVMSG" + to + " :\001" + text + "\001");
+    SendIRC("PRIVMSG " + to + " :\001" + text + "\001");
 }
 
 ThreadReturn inputThread(void *inp)
 {
     string command;
-    AddCommand("msg", 1, &msgCommand);
-    AddCommand("join", 1, &joinCommand);
-    AddCommand("part", 1, &partCommand);
-    AddCommand("ctcp", 1, &ctcpCommand);
+    // AddCommand("msg", 1, &msgCommand);
+    // AddCommand("join", 1, &joinCommand);
+    // AddCommand("part", 1, &partCommand);
+    // AddCommand("ctcp", 1, &ctcpCommand);
 
     while (true)
     {
@@ -276,7 +275,7 @@ void HandlePrivMsg(IRCMessage message)
     string to = message.parameters.at(0);
     string text = message.parameters.at(message.parameters.size() - 1);
 
-    if (text[0] = '\001')
+    if (text[0] == '\001')
     {
         HandleCTCP(message);
         return;
@@ -478,6 +477,7 @@ bool Login(string nick, string user, string password = string())
 
 void Parse(string data)
 {
+
     string original(data);
     IRCCommandPrefix cmdPrefix;
 
@@ -519,7 +519,6 @@ void Parse(string data)
 
     if (command == "ERROR")
     {
-        cout << data << endl;
         cout << original << endl;
         Disconnect();
         return;
@@ -548,7 +547,7 @@ void ReceiveData()
     string buff, line;
     memset(buffer, 0, 4096);
 
-    int bytes = recv(_socket, buffer, 4095, 0);
+    int bytes = recv(_socket, buffer, 4096, 0);
     if (bytes > 0)
     {
         buff = string(buffer);
@@ -588,8 +587,14 @@ int main(int argc, char *argv[])
         user = argv[4];
     }
 
-    Thread thread;
-    thread.Start(&inputThread, NULL);
+    AddCommand("msg", 1, &msgCommand);
+    AddCommand("join", 1, &joinCommand);
+    AddCommand("part", 1, &partCommand);
+    AddCommand("ctcp", 1, &ctcpCommand);
+    // Thread thread;
+    // thread.Start(&inputThread, NULL);
+    pthread_t id;
+    pthread_create(&id, NULL, inputThread, NULL );
     if (InitSocket())
     {
         cout << "Socket initialized. Connecting ... " << endl;
