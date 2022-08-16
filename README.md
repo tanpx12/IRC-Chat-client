@@ -5,9 +5,9 @@ This project is built for the Linux environment
 
 Compile : `g++ client.cpp -o ircclient -lpthread`
 
-Connect to IRC Server: ./ircclient host port 
+Connect to IRC Server: `./ircclient host port` 
 
-Example : ./ircclient fiery.swiftirc.net 8080
+Example : `./ircclient fiery.swiftirc.net 8080`
 
 Command:
 - /join #channel : connect to a channel 
